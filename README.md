@@ -15,6 +15,8 @@ Here it's just a tiny wrapper around it.
 
 SysFS is just a verbatim copy of wazero internal sysfs. Useful for mixing with wraplogfs.
 
+Do NOT use it in real-life code, because it is not being kept up-to-date with wazero; use it only for experimenting/debugging.
+
 ## wraplogfs
 
 WrapLogFS is a wrapper around existing filesystem that logs all inputs/outputs

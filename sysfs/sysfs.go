@@ -2,6 +2,9 @@
 // As it's internal, it cannot be used outside of wazero; however, it's useful to be
 // able to create AdaptFS and SysFS and instrument them and experiment on them further.
 //
+// Do NOT use it in prod code, because it is not being kept up-to-date with wazero;
+// use it only for experimenting/debugging.
+//
 // Network and polling was removed, as it was dependent on other internal packages.
 // As was all testing.
 //

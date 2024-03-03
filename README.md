@@ -1,6 +1,8 @@
 # wazero-fs-tools
 Helper tools for custom Wazero FS
 
+Go doc: https://pkg.go.dev/github.com/karelbilek/wazero-fs-tools
+
 ## memfs
 
 MemFS is a in-memory filesystem. Note that minimal amount of functionality is actually done;

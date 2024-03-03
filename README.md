@@ -59,7 +59,7 @@ func main() {
     memFS := memfs.New()
 
     // can write some files for start
-    err := rootFS.Write("tmp/foo.txt", []byte("this is content"))
+    err := rootFS.WriteFile("tmp/foo.txt", []byte("this is content"))
     if err != nil {
         log.Fatal(err)
     }

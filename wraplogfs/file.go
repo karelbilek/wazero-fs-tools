@@ -169,7 +169,7 @@ func printWhence(whence int) string {
 // Seek implements expsys.File
 func (d fileWithLog) Seek(offset int64, whence int) (newOffset int64, errno expsys.Errno) {
 	l := d.log("Seek")
-	l("calling with params: %d %d", offset, printWhence(whence))
+	l("calling with params: %d %s", offset, printWhence(whence))
 
 	defer func() {
 		l("returned results: %d %s", newOffset, errno)

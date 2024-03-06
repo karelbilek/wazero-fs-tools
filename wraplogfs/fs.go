@@ -27,8 +27,9 @@ type fsWithLog struct {
 // writeBytes controls if all bytes are written on stdout on reads/writes, or just "(data)".
 func New(base expsys.FS, stdout io.Writer, writeBytes bool) expsys.FS {
 	return fsWithLog{
-		_base:   base,
-		_stdlog: log.New(stdout, "", log.LstdFlags),
+		_base:       base,
+		_stdlog:     log.New(stdout, "", log.LstdFlags),
+		_writeBytes: writeBytes,
 	}
 }
 

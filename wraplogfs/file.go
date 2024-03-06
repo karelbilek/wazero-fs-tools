@@ -234,7 +234,7 @@ func (d fileWithLog) Utimens(atim int64, mtim int64) (e1 expsys.Errno) {
 // Write implements expsys.File
 func (d fileWithLog) Write(buf []byte) (n int, errno expsys.Errno) {
 	l := d.log("Write")
-	q
+
 	if d.writeBytes {
 		l("calling with params: %v", buf)
 	} else {

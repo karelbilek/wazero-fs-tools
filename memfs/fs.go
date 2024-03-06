@@ -11,7 +11,6 @@ package memfs
 
 import (
 	"errors"
-	"io"
 	"io/fs"
 
 	wasys "github.com/tetratelabs/wazero/sys"
@@ -30,10 +29,11 @@ func New() *MemFS {
 	return mmfs
 }
 
-// WriteFile is a helper function that writes a content to a file
-func (m *MemFS) WriteFile(path string, content []byte) error {
-	f, err := m.fs.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0)
-	if err != nil {
+// WriteFile is a helper function that writes a content to a file.
+// Errors have the same semantics as wazero errors
+func (m *MemFS) WriteFile(path string, content []byte) sys.Errno {
+	f, err := m.OpenFile(path, sys.O_WRONLY|sys.O_CREAT, 0)
+	if err != 0 {
 		return err
 	}
 
@@ -41,13 +41,22 @@ func (m *MemFS) WriteFile(path string, content []byte) error {
 	return err
 }
 
-// ReadFile is a helper function that returns a content of a file
-func (m *MemFS) ReadFile(path string) ([]byte, error) {
-	f, err := m.fs.OpenFile(path, os.O_RDONLY, 0)
-	if err != nil {
+// ReadFile is a helper function that returns a content of a file.
+// Errors have the same semantics as wazero errors
+func (m *MemFS) ReadFile(path string) ([]byte, sys.Errno) {
+	f, err := m.OpenFile(path, sys.O_RDONLY, 0)
+	if err != 0 {
 		return nil, err
 	}
-	return io.ReadAll(f)
+
+	st, errno := f.Stat()
+	if errno != 0 {
+		return nil, errno
+	}
+
+	buf := make([]byte, st.Size)
+	_, errno = f.Read(buf)
+	return buf, errno
 }
 
 // MemFS is a memory-only wazero filesystem, implementing just some basic functions.

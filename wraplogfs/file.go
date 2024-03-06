@@ -11,127 +11,146 @@ import (
 
 // fileWithLog implements expsys.File that is instrumented with logging
 type fileWithLog struct {
-	_stdlog     *log.Logger
-	_base       expsys.File
-	_writeBytes bool
+	stdlog     *log.Logger
+	base       expsys.File
+	writeBytes bool
+
+	name   string
+	fsName string
+}
+
+func (d fileWithLog) log(nm string) func(format string, params ...any) {
+	return func(format string, params ...any) {
+		txt := fmt.Sprintf(format, params...)
+		txt = fmt.Sprintf("WrapLogFile %s %s %s: %s", d.fsName, d.name, nm, txt)
+		d.stdlog.Println(txt)
+	}
 }
 
 // Close implements expsys.File
-func (_d fileWithLog) Close() (e1 expsys.Errno) {
-	_d._stdlog.Println("FileWithLog: calling Close")
+func (d fileWithLog) Close() (e1 expsys.Errno) {
+	l := d.log("Chmod")
+	l("calling with params: <>")
 	defer func() {
-		_results := []interface{}{"FileWithLog: Close returned results:", e1}
-		_d._stdlog.Println(_results...)
+		l("returned results: %s", e1)
 	}()
-	return _d._base.Close()
+	return d.base.Close()
 }
 
 // Datasync implements expsys.File
-func (_d fileWithLog) Datasync() (e1 expsys.Errno) {
-	_d._stdlog.Println("FileWithLog: calling Datasync")
+func (d fileWithLog) Datasync() (e1 expsys.Errno) {
+	l := d.log("Datasync")
+	l("calling with params: <>")
 	defer func() {
-		_results := []interface{}{"FileWithLog: Datasync returned results:", e1}
-		_d._stdlog.Println(_results...)
+		l("returned results: %s", e1)
 	}()
-	return _d._base.Datasync()
+	return d.base.Datasync()
 }
 
 // Dev implements expsys.File
-func (_d fileWithLog) Dev() (u1 uint64, e1 expsys.Errno) {
-	_d._stdlog.Println("FileWithLog: calling Dev")
+func (d fileWithLog) Dev() (u1 uint64, e1 expsys.Errno) {
+	l := d.log("Dev")
+	l("calling with params: <>")
 	defer func() {
-		_results := []interface{}{"FileWithLog: Dev returned results:", u1, e1}
-		_d._stdlog.Println(_results...)
+		l("returned results: %s %s", u1, e1)
 	}()
-	return _d._base.Dev()
+	return d.base.Dev()
 }
 
 // Ino implements expsys.File
-func (_d fileWithLog) Ino() (i1 wasys.Inode, e1 expsys.Errno) {
-	_d._stdlog.Println("FileWithLog: calling Ino")
+func (d fileWithLog) Ino() (i1 wasys.Inode, e1 expsys.Errno) {
+	l := d.log("Ino")
+	l("calling with params: <>")
 	defer func() {
-		_results := []interface{}{"FileWithLog: Ino returned results:", i1, e1}
-		_d._stdlog.Println(_results...)
+		l("returned results: %s %s", i1, e1)
 	}()
-	return _d._base.Ino()
+	return d.base.Ino()
 }
 
 // IsAppend implements expsys.File
-func (_d fileWithLog) IsAppend() (b1 bool) {
-	_d._stdlog.Println("FileWithLog: calling IsAppend")
+func (d fileWithLog) IsAppend() (b1 bool) {
+	l := d.log("IsAppend")
+	l("calling with params: <>")
+
 	defer func() {
-		_results := []interface{}{"FileWithLog: IsAppend returned results:", b1}
-		_d._stdlog.Println(_results...)
+		l("returned results: %t", b1)
 	}()
-	return _d._base.IsAppend()
+	return d.base.IsAppend()
 }
 
 // IsDir implements expsys.File
-func (_d fileWithLog) IsDir() (b1 bool, e1 expsys.Errno) {
-	_d._stdlog.Println("FileWithLog: calling IsDir")
+func (d fileWithLog) IsDir() (b1 bool, e1 expsys.Errno) {
+	l := d.log("IsDir")
+	l("calling with params: <>")
+
 	defer func() {
-		_results := []interface{}{"FileWithLog: IsDir returned results:", b1, e1}
-		_d._stdlog.Println(_results...)
+		l("returned results: %t %s", b1, e1)
 	}()
-	return _d._base.IsDir()
+	return d.base.IsDir()
 }
 
 // Pread implements expsys.File
-func (_d fileWithLog) Pread(buf []byte, off int64) (n int, errno expsys.Errno) {
-	if _d._writeBytes {
-		_d._stdlog.Println("FileWithLog: calling Pread with params:", buf, off)
+func (d fileWithLog) Pread(buf []byte, off int64) (n int, errno expsys.Errno) {
+	l := d.log("Pread")
+
+	if d.writeBytes {
+		l("calling with params: %v %d", buf, off)
 	} else {
-		_d._stdlog.Println("FileWithLog: calling Pread with params:", "(data)", off)
+		l("calling with params: (none) %d", off)
 	}
 	defer func() {
-		if _d._writeBytes {
-			_d._stdlog.Println("FileWithLog: Pread returned results:", n, errno, ", buffer:", buf)
+		if d.writeBytes {
+			l("returned results: %d %s, buffer: %v", n, errno, buf)
 		} else {
-			_d._stdlog.Println("FileWithLog: Pread returned results:", n, errno)
+			l("returned results: %d %s", n, errno)
 		}
 	}()
-	return _d._base.Pread(buf, off)
+	return d.base.Pread(buf, off)
 }
 
 // Pwrite implements expsys.File
-func (_d fileWithLog) Pwrite(buf []byte, off int64) (n int, errno expsys.Errno) {
-	if _d._writeBytes {
-		_d._stdlog.Println("FileWithLog: calling Pwrite with params:", buf, off)
+func (d fileWithLog) Pwrite(buf []byte, off int64) (n int, errno expsys.Errno) {
+	l := d.log("Pwrite")
+
+	if d.writeBytes {
+		l("calling with params: %v %d", buf, off)
 	} else {
-		_d._stdlog.Println("FileWithLog: calling Pwrite with params:", "(data)", off)
+		l("calling with params: (none) %d", off)
 	}
+
 	defer func() {
-		_results := []interface{}{"FileWithLog: Pwrite returned results:", n, errno}
-		_d._stdlog.Println(_results...)
+		l("returned results: %d %s", n, errno)
 	}()
-	return _d._base.Pwrite(buf, off)
+	return d.base.Pwrite(buf, off)
 }
 
 // Read implements expsys.File
-func (_d fileWithLog) Read(buf []byte) (n int, errno expsys.Errno) {
-	if _d._writeBytes {
-		_d._stdlog.Println("FileWithLog: calling Read with params:", buf)
+func (d fileWithLog) Read(buf []byte) (n int, errno expsys.Errno) {
+	l := d.log("Read")
+
+	if d.writeBytes {
+		l("calling with params: %v", buf)
 	} else {
-		_d._stdlog.Println("FileWithLog: calling Read with params:", "(data)")
+		l("calling with params: (none)")
 	}
 	defer func() {
-		if _d._writeBytes {
-			_d._stdlog.Println("FileWithLog: Read returned results:", n, errno, ", buffer:", buf)
+		if d.writeBytes {
+			l("returned results: %d %s, buffer: %v", n, errno, buf)
 		} else {
-			_d._stdlog.Println("FileWithLog: Read returned results:", n, errno)
+			l("returned results: %d %s", n, errno)
 		}
 	}()
-	return _d._base.Read(buf)
+	return d.base.Read(buf)
 }
 
 // Readdir implements expsys.File
-func (_d fileWithLog) Readdir(n int) (dirents []expsys.Dirent, errno expsys.Errno) {
-	_params := []interface{}{"FileWithLog: calling Readdir with params:", n}
-	_d._stdlog.Println(_params...)
+func (d fileWithLog) Readdir(n int) (dirents []expsys.Dirent, errno expsys.Errno) {
+	l := d.log("Readdir")
+	l("calling with params: %d", n)
 	defer func() {
-		_d._stdlog.Printf("FileWithLog: Readdir returned results: %+v %s", dirents, errno)
+		l("returned results: %+v %s", dirents, errno)
 	}()
-	return _d._base.Readdir(n)
+	return d.base.Readdir(n)
 }
 
 func printWhence(whence int) string {
@@ -148,78 +167,82 @@ func printWhence(whence int) string {
 }
 
 // Seek implements expsys.File
-func (_d fileWithLog) Seek(offset int64, whence int) (newOffset int64, errno expsys.Errno) {
-	_params := []interface{}{"FileWithLog: calling Seek with params:", offset, printWhence(whence)}
-	_d._stdlog.Println(_params...)
+func (d fileWithLog) Seek(offset int64, whence int) (newOffset int64, errno expsys.Errno) {
+	l := d.log("Seek")
+	l("calling with params: %d %d", offset, printWhence(whence))
+
 	defer func() {
-		_results := []interface{}{"FileWithLog: Seek returned results:", newOffset, errno}
-		_d._stdlog.Println(_results...)
+		l("returned results: %d %s", newOffset, errno)
 	}()
-	return _d._base.Seek(offset, whence)
+	return d.base.Seek(offset, whence)
 }
 
 // SetAppend implements expsys.File
-func (_d fileWithLog) SetAppend(enable bool) (e1 expsys.Errno) {
-	_params := []interface{}{"FileWithLog: calling SetAppend with params:", enable}
-	_d._stdlog.Println(_params...)
+func (d fileWithLog) SetAppend(enable bool) (e1 expsys.Errno) {
+	l := d.log("SetAppend")
+	l("calling with params: %t", enable)
+
 	defer func() {
-		_results := []interface{}{"FileWithLog: SetAppend returned results:", e1}
-		_d._stdlog.Println(_results...)
+		l("returned results: %d %s", e1)
 	}()
-	return _d._base.SetAppend(enable)
+	return d.base.SetAppend(enable)
 }
 
 // Stat implements expsys.File
-func (_d fileWithLog) Stat() (s1 wasys.Stat_t, e1 expsys.Errno) {
-	_d._stdlog.Println("FileWithLog: calling Stat")
+func (d fileWithLog) Stat() (s1 wasys.Stat_t, e1 expsys.Errno) {
+	l := d.log("Stat")
+	l("calling with params: <>")
+
 	defer func() {
-		_d._stdlog.Printf("FileWithLog: Stat returned results: %+v %s", s1, e1)
+		l("returned results: %+v %s", s1, e1)
 	}()
-	return _d._base.Stat()
+	return d.base.Stat()
 }
 
 // Sync implements expsys.File
-func (_d fileWithLog) Sync() (e1 expsys.Errno) {
-	_d._stdlog.Println("FileWithLog: calling Sync")
+func (d fileWithLog) Sync() (e1 expsys.Errno) {
+	l := d.log("Sync")
+	l("calling with params: <>")
 	defer func() {
-		_results := []interface{}{"FileWithLog: Sync returned results:", e1}
-		_d._stdlog.Println(_results...)
+		l("returned results: %s", e1)
+
 	}()
-	return _d._base.Sync()
+	return d.base.Sync()
 }
 
 // Truncate implements expsys.File
-func (_d fileWithLog) Truncate(size int64) (e1 expsys.Errno) {
-	_params := []interface{}{"FileWithLog: calling Truncate with params:", size}
-	_d._stdlog.Println(_params...)
+func (d fileWithLog) Truncate(size int64) (e1 expsys.Errno) {
+	l := d.log("Truncate")
+	l("calling with params: %d", size)
+
 	defer func() {
-		_results := []interface{}{"FileWithLog: Truncate returned results:", e1}
-		_d._stdlog.Println(_results...)
+		l("returned results: %s", e1)
 	}()
-	return _d._base.Truncate(size)
+	return d.base.Truncate(size)
 }
 
 // Utimens implements expsys.File
-func (_d fileWithLog) Utimens(atim int64, mtim int64) (e1 expsys.Errno) {
-	_params := []interface{}{"FileWithLog: calling Utimens with params:", atim, mtim}
-	_d._stdlog.Println(_params...)
+func (d fileWithLog) Utimens(atim int64, mtim int64) (e1 expsys.Errno) {
+	l := d.log("Utimens")
+	l("calling with params: %d %d", atim, mtim)
 	defer func() {
-		_results := []interface{}{"FileWithLog: Utimens returned results:", e1}
-		_d._stdlog.Println(_results...)
+		l("returned results: %s", e1)
 	}()
-	return _d._base.Utimens(atim, mtim)
+	return d.base.Utimens(atim, mtim)
 }
 
 // Write implements expsys.File
-func (_d fileWithLog) Write(buf []byte) (n int, errno expsys.Errno) {
-	if _d._writeBytes {
-		_d._stdlog.Println("FileWithLog: calling Write with params:", buf)
+func (d fileWithLog) Write(buf []byte) (n int, errno expsys.Errno) {
+	l := d.log("Write")
+
+	if d.writeBytes {
+		l("calling with params: %v %d", buf)
 	} else {
-		_d._stdlog.Println("FileWithLog: calling Write with params:", "(data)")
+		l("calling with params: (none) %d")
 	}
+
 	defer func() {
-		_results := []interface{}{"FileWithLog: Write returned results:", n, errno}
-		_d._stdlog.Println(_results...)
+		l("returned results: %d %s", n, errno)
 	}()
-	return _d._base.Write(buf)
+	return d.base.Write(buf)
 }

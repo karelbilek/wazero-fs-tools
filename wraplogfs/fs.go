@@ -5,6 +5,7 @@
 package wraplogfs
 
 import (
+	"fmt"
 	"io"
 	"io/fs"
 	"log"
@@ -18,62 +19,71 @@ type fsWithLog struct {
 	// intentionally does NOT embed unimplemented; I do NOT want to be forward-compatible;
 	// I want to break on missing funcs
 
-	_stdlog     *log.Logger
-	_base       expsys.FS
-	_writeBytes bool
+	stdlog     *log.Logger
+	base       expsys.FS
+	writeBytes bool
+	fsName     string
 }
 
 // New returns a new filesystem on top of another filesystem.
 // writeBytes controls if all bytes are written on stdout on reads/writes, or just "(data)".
-func New(base expsys.FS, stdout io.Writer, writeBytes bool) expsys.FS {
+func New(base expsys.FS, stdout io.Writer, writeBytes bool, name string) expsys.FS {
 	return fsWithLog{
-		_base:       base,
-		_stdlog:     log.New(stdout, "", log.LstdFlags),
-		_writeBytes: writeBytes,
+		base:       base,
+		stdlog:     log.New(stdout, "", log.LstdFlags),
+		writeBytes: writeBytes,
+		fsName:     name,
+	}
+}
+
+func (d fsWithLog) log(nm string) func(format string, params ...any) {
+	return func(format string, params ...any) {
+		txt := fmt.Sprintf(format, params...)
+		txt = fmt.Sprintf("WrapLogFS %s %s: %s", d.fsName, nm, txt)
+		d.stdlog.Println(txt)
 	}
 }
 
 // Chmod implements sys.FS
-func (_d fsWithLog) Chmod(path string, perm fs.FileMode) (e1 expsys.Errno) {
-	_params := []interface{}{"FSWithLog: calling Chmod with params:", path, perm}
-	_d._stdlog.Println(_params...)
+func (d fsWithLog) Chmod(path string, perm fs.FileMode) (e1 expsys.Errno) {
+	l := d.log("Chmod")
+	l("calling with params: %s %s", path, perm)
 	defer func() {
-		_results := []interface{}{"FSWithLog: Chmod returned results:", e1}
-		_d._stdlog.Println(_results...)
+		l("returned results: %s", e1)
 	}()
-	return _d._base.Chmod(path, perm)
+	return d.base.Chmod(path, perm)
 }
 
 // Link implements sys.FS
-func (_d fsWithLog) Link(oldPath string, newPath string) (e1 expsys.Errno) {
-	_params := []interface{}{"FSWithLog: calling Link with params:", oldPath, newPath}
-	_d._stdlog.Println(_params...)
+func (d fsWithLog) Link(oldPath string, newPath string) (e1 expsys.Errno) {
+	l := d.log("Link")
+	l("calling with params: %s %s", oldPath, newPath)
 	defer func() {
-		_results := []interface{}{"FSWithLog: Link returned results:", e1}
-		_d._stdlog.Println(_results...)
+		l("returned results: %s", e1)
 	}()
-	return _d._base.Link(oldPath, newPath)
+	return d.base.Link(oldPath, newPath)
 }
 
 // Lstat implements sys.FS
-func (_d fsWithLog) Lstat(path string) (s1 wasys.Stat_t, e1 expsys.Errno) {
-	_params := []interface{}{"FSWithLog: calling Lstat with params:", path}
-	_d._stdlog.Println(_params...)
+func (d fsWithLog) Lstat(path string) (s1 wasys.Stat_t, e1 expsys.Errno) {
+	l := d.log("Lstat")
+	l("calling with params: %s", path)
+
 	defer func() {
-		_d._stdlog.Printf("FSWithLog: Lstat returned results: %+v %s", s1, e1)
+		l("returned results: %+v %s", s1, e1)
 	}()
-	return _d._base.Lstat(path)
+	return d.base.Lstat(path)
 }
 
 // Mkdir implements sys.FS
-func (_d fsWithLog) Mkdir(path string, perm fs.FileMode) (e1 expsys.Errno) {
-	_params := []interface{}{"FSWithLog: calling Mkdir with params:", path, perm}
-	_d._stdlog.Println(_params...)
+func (d fsWithLog) Mkdir(path string, perm fs.FileMode) (e1 expsys.Errno) {
+	l := d.log("Mkdir")
+	l("calling with params: %s %s", path, perm)
+
 	defer func() {
-		_results := []interface{}{"FSWithLog: Mkdir returned results:", e1}
-		_d._stdlog.Println(_results...)
+		l("returned results: %+v %s", e1)
 	}()
-	return _d._base.Mkdir(path, perm)
+	return d.base.Mkdir(path, perm)
 }
 
 func printOflags(flag expsys.Oflag) string {
@@ -107,92 +117,97 @@ func printOflags(flag expsys.Oflag) string {
 }
 
 // OpenFile implements sys.FS
-func (_d fsWithLog) OpenFile(path string, flag expsys.Oflag, perm fs.FileMode) (f1 expsys.File, e1 expsys.Errno) {
-	_params := []interface{}{"FSWithLog: calling OpenFile with params:", path, printOflags(flag), perm}
-	_d._stdlog.Println(_params...)
+func (d fsWithLog) OpenFile(path string, flag expsys.Oflag, perm fs.FileMode) (f1 expsys.File, e1 expsys.Errno) {
+	l := d.log("OpenFile")
+	l("calling with params: %s %s; %s", path, printOflags(flag), perm)
+
 	defer func() {
-		_d._stdlog.Printf("FSWithLog: OpenFile returned results: %T %+v %s", f1, f1, e1)
+		l("returned results: %T %+v %s", f1, f1, e1)
 	}()
-	fl, errno := _d._base.OpenFile(path, flag, perm)
+	fl, errno := d.base.OpenFile(path, flag, perm)
 	return fileWithLog{
-		_base:       fl,
-		_stdlog:     _d._stdlog,
-		_writeBytes: _d._writeBytes,
+		base:       fl,
+		stdlog:     d.stdlog,
+		writeBytes: d.writeBytes,
+		name:       path,
+		fsName:     d.fsName,
 	}, errno
 }
 
 // Readlink implements sys.FS
-func (_d fsWithLog) Readlink(path string) (s1 string, e1 expsys.Errno) {
-	_params := []interface{}{"FSWithLog: calling Readlink with params:", path}
-	_d._stdlog.Println(_params...)
+func (d fsWithLog) Readlink(path string) (s1 string, e1 expsys.Errno) {
+	l := d.log("Readlink")
+	l("calling with params: %s", path)
+
 	defer func() {
-		_results := []interface{}{"FSWithLog: Readlink returned results:", s1, e1}
-		_d._stdlog.Println(_results...)
+		l("returned results: %s %s", s1, e1)
 	}()
-	return _d._base.Readlink(path)
+	return d.base.Readlink(path)
 }
 
 // Rename implements sys.FS
-func (_d fsWithLog) Rename(from string, to string) (e1 expsys.Errno) {
-	_params := []interface{}{"FSWithLog: calling Rename with params:", from, to}
-	_d._stdlog.Println(_params...)
+func (d fsWithLog) Rename(from string, to string) (e1 expsys.Errno) {
+	l := d.log("Rename")
+	l("calling with params: %s %s", from, to)
+
 	defer func() {
-		_results := []interface{}{"FSWithLog: Rename returned results:", e1}
-		_d._stdlog.Println(_results...)
+		l("returned results: %s", e1)
 	}()
-	return _d._base.Rename(from, to)
+	return d.base.Rename(from, to)
 }
 
 // Rmdir implements sys.FS
-func (_d fsWithLog) Rmdir(path string) (e1 expsys.Errno) {
-	_params := []interface{}{"FSWithLog: calling Rmdir with params:", path}
-	_d._stdlog.Println(_params...)
+func (d fsWithLog) Rmdir(path string) (e1 expsys.Errno) {
+	l := d.log("Rmdir")
+	l("calling with params: %s", path)
+
 	defer func() {
-		_results := []interface{}{"FSWithLog: Rmdir returned results:", e1}
-		_d._stdlog.Println(_results...)
+		l("returned results: %s", e1)
 	}()
-	return _d._base.Rmdir(path)
+	return d.base.Rmdir(path)
 }
 
 // Stat implements sys.FS
-func (_d fsWithLog) Stat(path string) (s1 wasys.Stat_t, e1 expsys.Errno) {
-	_params := []interface{}{"FSWithLog: calling Stat with params:", path}
-	_d._stdlog.Println(_params...)
+func (d fsWithLog) Stat(path string) (s1 wasys.Stat_t, e1 expsys.Errno) {
+	l := d.log("Stat")
+	l("calling with params: %s", path)
+
 	defer func() {
-		_d._stdlog.Printf("FSWithLog: Stat returned results: %+v %s", s1, e1)
+		l("returned results: %s", e1)
 	}()
-	return _d._base.Stat(path)
+
+	return d.base.Stat(path)
 }
 
 // Symlink implements sys.FS
-func (_d fsWithLog) Symlink(oldPath string, linkName string) (e1 expsys.Errno) {
-	_params := []interface{}{"FSWithLog: calling Symlink with params:", oldPath, linkName}
-	_d._stdlog.Println(_params...)
+func (d fsWithLog) Symlink(oldPath string, linkName string) (e1 expsys.Errno) {
+	l := d.log("Symlink")
+	l("calling with params: %s", oldPath, linkName)
+
 	defer func() {
-		_results := []interface{}{"FSWithLog: Symlink returned results:", e1}
-		_d._stdlog.Println(_results...)
+		l("returned results: %s", e1)
 	}()
-	return _d._base.Symlink(oldPath, linkName)
+	return d.base.Symlink(oldPath, linkName)
 }
 
 // Unlink implements sys.FS
-func (_d fsWithLog) Unlink(path string) (e1 expsys.Errno) {
-	_params := []interface{}{"FSWithLog: calling Unlink with params:", path}
-	_d._stdlog.Println(_params...)
+func (d fsWithLog) Unlink(path string) (e1 expsys.Errno) {
+	l := d.log("Symlink")
+	l("calling with params: %s", path)
+
 	defer func() {
-		_results := []interface{}{"FSWithLog: Unlink returned results:", e1}
-		_d._stdlog.Println(_results...)
+		l("returned results: %s", e1)
 	}()
-	return _d._base.Unlink(path)
+	return d.base.Unlink(path)
 }
 
 // Utimens implements sys.FS
-func (_d fsWithLog) Utimens(path string, atim int64, mtim int64) (e1 expsys.Errno) {
-	_params := []interface{}{"FSWithLog: calling Utimens with params:", path, atim, mtim}
-	_d._stdlog.Println(_params...)
+func (d fsWithLog) Utimens(path string, atim int64, mtim int64) (e1 expsys.Errno) {
+	l := d.log("Symlink")
+	l("calling with params: %s %d %d", path, atim, mtim)
+
 	defer func() {
-		_results := []interface{}{"FSWithLog: Utimens returned results:", e1}
-		_d._stdlog.Println(_results...)
+		l("returned results: %s", e1)
 	}()
-	return _d._base.Utimens(path, atim, mtim)
+	return d.base.Utimens(path, atim, mtim)
 }

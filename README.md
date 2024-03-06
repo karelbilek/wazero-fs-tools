@@ -36,7 +36,7 @@ import (
 // ...
 func main() {
     rootFS := sysfs.DirFS("/")
-    wrappedFS := wraplogfs.New(rootFS, os.Stdout, false)
+    wrappedFS := wraplogfs.New(rootFS, os.Stdout, false, "root fs")
 
     fsConfig := wazero.NewFSConfig()
     fsConfig = fsConfig.(expsysfs.FSConfig).WithSysFSMount(wrappedFS, "/") 

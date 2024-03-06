@@ -238,7 +238,7 @@ func (d fileWithLog) Write(buf []byte) (n int, errno expsys.Errno) {
 	if d.writeBytes {
 		l("calling with params: %v %d", buf)
 	} else {
-		l("calling with params: (none) %d")
+		l("calling with params: (none)")
 	}
 
 	defer func() {

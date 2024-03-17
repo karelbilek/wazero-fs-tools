@@ -11,6 +11,9 @@ feel free to add a PR.
 The actual underlying implementation is github.com/blang/vfs/memfs.
 Here it's just a tiny wrapper around it.
 
+github.com/blang/vfs/memfs seems to be no longer maintained, so if there is some issue, I can eventually
+subtree it here; but I don't think it's necessary for now.
+
 ## sysfs
 
 SysFS is just a verbatim copy of wazero internal sysfs. Useful for mixing with wraplogfs.

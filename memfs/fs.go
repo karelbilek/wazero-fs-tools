@@ -12,6 +12,7 @@ package memfs
 import (
 	"errors"
 	"io/fs"
+	"strings"
 
 	wasys "github.com/tetratelabs/wazero/sys"
 
@@ -119,6 +120,31 @@ func (m *MemFS) OpenFile(path string, flag sys.Oflag, perm fs.FileMode) (sys.Fil
 	}
 	fl := &memoryFSFile{fl: f, path: path, fs: m.fs}
 	return fl, 0
+}
+
+func (m *MemFS) Mkdir(path string, perm fs.FileMode) sys.Errno {
+	err := m.fs.Mkdir(path, perm)
+	// note - this is not 100% correct, but good enough
+	// note - we canno "just" call stat here, as mkdir should be atomic; the file maybe doesn't exist anymore
+	// just return EEXIST I guess...
+	if err != nil {
+		if strings.Contains(err.Error(), "already exists") {
+			return sys.EEXIST
+		}
+		return sys.EINVAL
+	}
+	return 0
+}
+
+func (m *MemFS) Unlink(path string) sys.Errno {
+	err := m.fs.Remove(path)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return sys.ENOENT
+		}
+		return sys.EINVAL
+	}
+	return 0
 }
 
 func stat(mfs *memfs.MemFS, path string) (wasys.Stat_t, sys.Errno) {

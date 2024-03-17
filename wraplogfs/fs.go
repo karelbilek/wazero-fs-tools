@@ -47,7 +47,7 @@ func (d fsWithLog) log(nm string) func(format string, params ...any) {
 // Chmod implements sys.FS
 func (d fsWithLog) Chmod(path string, perm fs.FileMode) (e1 expsys.Errno) {
 	l := d.log("Chmod")
-	l("calling with params: %s %s", path, perm)
+	l("calling with params: %q %s", path, perm)
 	defer func() {
 		l("returned results: %s", e1)
 	}()
@@ -57,7 +57,7 @@ func (d fsWithLog) Chmod(path string, perm fs.FileMode) (e1 expsys.Errno) {
 // Link implements sys.FS
 func (d fsWithLog) Link(oldPath string, newPath string) (e1 expsys.Errno) {
 	l := d.log("Link")
-	l("calling with params: %s %s", oldPath, newPath)
+	l("calling with params: %q %q", oldPath, newPath)
 	defer func() {
 		l("returned results: %s", e1)
 	}()
@@ -67,7 +67,7 @@ func (d fsWithLog) Link(oldPath string, newPath string) (e1 expsys.Errno) {
 // Lstat implements sys.FS
 func (d fsWithLog) Lstat(path string) (s1 wasys.Stat_t, e1 expsys.Errno) {
 	l := d.log("Lstat")
-	l("calling with params: %s", path)
+	l("calling with params: %q", path)
 
 	defer func() {
 		l("returned results: %+v %s", s1, e1)
@@ -78,7 +78,7 @@ func (d fsWithLog) Lstat(path string) (s1 wasys.Stat_t, e1 expsys.Errno) {
 // Mkdir implements sys.FS
 func (d fsWithLog) Mkdir(path string, perm fs.FileMode) (e1 expsys.Errno) {
 	l := d.log("Mkdir")
-	l("calling with params: %s %s", path, perm)
+	l("calling with params: %q %s", path, perm)
 
 	defer func() {
 		l("returned results: %+v %s", e1)
@@ -119,7 +119,7 @@ func printOflags(flag expsys.Oflag) string {
 // OpenFile implements sys.FS
 func (d fsWithLog) OpenFile(path string, flag expsys.Oflag, perm fs.FileMode) (f1 expsys.File, e1 expsys.Errno) {
 	l := d.log("OpenFile")
-	l("calling with params: %s %s; %s", path, printOflags(flag), perm)
+	l("calling with params: %q %s; %s", path, printOflags(flag), perm)
 
 	defer func() {
 		l("returned results: %T %+v %s", f1, f1, e1)
@@ -137,10 +137,10 @@ func (d fsWithLog) OpenFile(path string, flag expsys.Oflag, perm fs.FileMode) (f
 // Readlink implements sys.FS
 func (d fsWithLog) Readlink(path string) (s1 string, e1 expsys.Errno) {
 	l := d.log("Readlink")
-	l("calling with params: %s", path)
+	l("calling with params: %q", path)
 
 	defer func() {
-		l("returned results: %s %s", s1, e1)
+		l("returned results: %q %s", s1, e1)
 	}()
 	return d.base.Readlink(path)
 }
@@ -148,7 +148,7 @@ func (d fsWithLog) Readlink(path string) (s1 string, e1 expsys.Errno) {
 // Rename implements sys.FS
 func (d fsWithLog) Rename(from string, to string) (e1 expsys.Errno) {
 	l := d.log("Rename")
-	l("calling with params: %s %s", from, to)
+	l("calling with params: %q %q", from, to)
 
 	defer func() {
 		l("returned results: %s", e1)
@@ -159,7 +159,7 @@ func (d fsWithLog) Rename(from string, to string) (e1 expsys.Errno) {
 // Rmdir implements sys.FS
 func (d fsWithLog) Rmdir(path string) (e1 expsys.Errno) {
 	l := d.log("Rmdir")
-	l("calling with params: %s", path)
+	l("calling with params: %q", path)
 
 	defer func() {
 		l("returned results: %s", e1)
@@ -170,7 +170,7 @@ func (d fsWithLog) Rmdir(path string) (e1 expsys.Errno) {
 // Stat implements sys.FS
 func (d fsWithLog) Stat(path string) (s1 wasys.Stat_t, e1 expsys.Errno) {
 	l := d.log("Stat")
-	l("calling with params: %s", path)
+	l("calling with params: %q", path)
 
 	defer func() {
 		l("returned results: %s", e1)
@@ -182,7 +182,7 @@ func (d fsWithLog) Stat(path string) (s1 wasys.Stat_t, e1 expsys.Errno) {
 // Symlink implements sys.FS
 func (d fsWithLog) Symlink(oldPath string, linkName string) (e1 expsys.Errno) {
 	l := d.log("Symlink")
-	l("calling with params: %s", oldPath, linkName)
+	l("calling with params: %q %q", oldPath, linkName)
 
 	defer func() {
 		l("returned results: %s", e1)
@@ -192,8 +192,8 @@ func (d fsWithLog) Symlink(oldPath string, linkName string) (e1 expsys.Errno) {
 
 // Unlink implements sys.FS
 func (d fsWithLog) Unlink(path string) (e1 expsys.Errno) {
-	l := d.log("Symlink")
-	l("calling with params: %s", path)
+	l := d.log("Unlink")
+	l("calling with params: %q", path)
 
 	defer func() {
 		l("returned results: %s", e1)
@@ -204,7 +204,7 @@ func (d fsWithLog) Unlink(path string) (e1 expsys.Errno) {
 // Utimens implements sys.FS
 func (d fsWithLog) Utimens(path string, atim int64, mtim int64) (e1 expsys.Errno) {
 	l := d.log("Symlink")
-	l("calling with params: %s %d %d", path, atim, mtim)
+	l("calling with params: %q %d %d", path, atim, mtim)
 
 	defer func() {
 		l("returned results: %s", e1)
